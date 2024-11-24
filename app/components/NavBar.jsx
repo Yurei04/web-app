@@ -7,11 +7,9 @@ import MenuOverlay from "./MenuOverlay";
 
 const navLinks = [
   { title: "About", path: "#info" },
-  { title: "Skills", path: "#skills" },
-  { title: "Experience", path: "#experience" },
-  { title: "Hobbies", path: "#hobbies" },
-  { title: "Projects", path: "#projects" },
-  { title: "Contact", path: "#contact" },
+  { title: "Table", path: "#table" },
+  { title: "Settings", path: "#settings" },
+
 ];
 
 const Navbar = () => {
@@ -21,7 +19,7 @@ const Navbar = () => {
     <nav className="fixed mx-auto border-b border-blue-500 top-0 left-0 right-0 z-10 bg-[#121212] bg-opacity-100 py-2">
       <div className="flex container lg:py-4 flex-wrap items-center justify-between mx-auto px-3 py-2">
         <Link href="/" legacyBehavior>
-          <a className="text-white text-2xl">Yuri.</a>
+          <a className="text-white text-2xl">Yurei</a>
         </Link>
         <div className="mobile-menu block md:hidden">
           {!navbarOpen ? (
