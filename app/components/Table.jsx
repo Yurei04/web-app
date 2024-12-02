@@ -1,35 +1,30 @@
-"use client"
+"use client";
 
-import * as React from 'react';
-import { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
-import alpha from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-import TableSortLabel from '@mui/material/TableSortLabel';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import Checkbox from '@mui/material/Checkbox';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import visuallyHidden from '@mui/utils';
+import React, { useEffect, useState } from "react";
+import {
+  ThemeProvider,
+  createTheme,
+  Box,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Toolbar,
+  Typography,
+  TextField,
+  Button,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import { ThemeProvider } from '@emotion/react';
-import { TextField } from '@mui/material';
 
+// Dark theme setup
 const darkTheme = createTheme({
   palette: {
     mode: "dark",
@@ -42,8 +37,8 @@ const darkTheme = createTheme({
   },
 });
 
-export default function CRUDTable() {
-  const [rows, setRows] = useState({});
+export default function CRUDDarkModeTable() {
+  const [rows, setRows] = useState([]);
   const [editingRow, setEditingRow] = useState(null);
   const [newRow, setNewRow] = useState({
     name: "",
@@ -53,16 +48,60 @@ export default function CRUDTable() {
     protein: "",
   });
 
+  // Fetch data from backend
+  const fetchData = async () => {
+    const response = await fetch("http://localhost:5000/items");
+    const data = await response.json();
+    setRows(data);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Add a new row
+  const handleAddRow = async () => {
+    const response = await fetch("http://localhost:5000/items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newRow),
+    });
+    if (response.ok) {
+      fetchData();
+      setNewRow({ name: "", calories: "", fat: "", carbs: "", protein: "" });
+    }
+  };
+
+  // Delete a row
+  const handleDeleteRow = async (id) => {
+    await fetch(`http://localhost:5000/items/${id}`, {
+      method: "DELETE",
+    });
+    fetchData();
+  };
+
+  // Update a row
+  const handleSaveRow = async (row) => {
+    await fetch(`http://localhost:5000/items/${row.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(row),
+    });
+    setEditingRow(null);
+    fetchData();
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
-      <Box sx={{ width: "100%", p: 2}}>
-        <Paper sx={{ width: "100%", mb: 2, p: 2 }}></Paper>
+      <Box sx={{ width: "100%", p: 2 }}>
+        <Paper sx={{ width: "100%", mb: 2, p: 2 }}>
           <Toolbar>
-            
+            <Typography variant="h6" sx={{ flex: "1 1 100%" }}>
+              SQLite CRUD Table in Dark Mode
+            </Typography>
           </Toolbar>
           <TableContainer>
             <Table>
-
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
@@ -73,7 +112,6 @@ export default function CRUDTable() {
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
-
               <TableBody>
                 {rows.map((row) => (
                   <TableRow key={row.id}>
@@ -100,7 +138,9 @@ export default function CRUDTable() {
                           onChange={(e) =>
                             setRows((prevRows) =>
                               prevRows.map((r) =>
-                                r.id === row.id ? { ...r, calories: e.target.value } : r
+                                r.id === row.id
+                                  ? { ...r, calories: e.target.value }
+                                  : r
                               )
                             )
                           }
@@ -159,11 +199,11 @@ export default function CRUDTable() {
                     </TableCell>
                     <TableCell align="right">
                       {editingRow === row.id ? (
-                        <IconButton onClick={() => handleSaveRow(row.id)}>
+                        <IconButton onClick={() => handleSaveRow(row)}>
                           <SaveIcon />
                         </IconButton>
                       ) : (
-                        <IconButton onClick={() => handleEditRow(row.id)}>
+                        <IconButton onClick={() => setEditingRow(row.id)}>
                           <EditIcon />
                         </IconButton>
                       )}
@@ -173,60 +213,63 @@ export default function CRUDTable() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {/* Add New Row */}
                 <TableRow>
                   <TableCell>
                     <TextField
-                      placeholder="Name"
                       value={newRow.name}
-                      onChange={(e) => setNewRow({ ...newRow, name: e.target.value })}
+                      onChange={(e) =>
+                        setNewRow({ ...newRow, name: e.target.value })
+                      }
+                      placeholder="Name"
                     />
                   </TableCell>
                   <TableCell>
                     <TextField
-                      placeholder="Calories"
                       value={newRow.calories}
                       onChange={(e) =>
                         setNewRow({ ...newRow, calories: e.target.value })
                       }
+                      placeholder="Calories"
                     />
                   </TableCell>
                   <TableCell>
                     <TextField
-                      placeholder="Fat"
                       value={newRow.fat}
                       onChange={(e) => setNewRow({ ...newRow, fat: e.target.value })}
+                      placeholder="Fat"
                     />
                   </TableCell>
                   <TableCell>
                     <TextField
-                      placeholder="Carbs"
                       value={newRow.carbs}
-                      onChange={(e) => setNewRow({ ...newRow, carbs: e.target.value })}
+                      onChange={(e) =>
+                        setNewRow({ ...newRow, carbs: e.target.value })
+                      }
+                      placeholder="Carbs"
                     />
                   </TableCell>
                   <TableCell>
                     <TextField
-                      placeholder="Protein"
                       value={newRow.protein}
                       onChange={(e) =>
                         setNewRow({ ...newRow, protein: e.target.value })
                       }
+                      placeholder="Protein"
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton onClick={handleAddRow}>
-                      <AddCircleIcon />
-                    </IconButton>
+                    <Tooltip title="Add Row">
+                      <IconButton onClick={handleAddRow}>
+                        <AddCircleIcon />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               </TableBody>
-
             </Table>
           </TableContainer>
+        </Paper>
       </Box>
     </ThemeProvider>
-  )
-
+  );
 }
-
