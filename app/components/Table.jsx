@@ -50,9 +50,13 @@ export default function CRUDDarkModeTable() {
 
   // Fetch data from backend
   const fetchData = async () => {
-    const response = await fetch("http://localhost:5000/items");
-    const data = await response.json();
-    setRows(data);
+    try {
+      const response = await fetch("http://localhost:5000/items");
+      const data = await response.json();
+      setRows(data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   };
 
   useEffect(() => {
@@ -61,34 +65,44 @@ export default function CRUDDarkModeTable() {
 
   // Add a new row
   const handleAddRow = async () => {
-    const response = await fetch("http://localhost:5000/items", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newRow),
-    });
-    if (response.ok) {
-      fetchData();
-      setNewRow({ name: "", calories: "", fat: "", carbs: "", protein: "" });
+    try {
+      const response = await fetch("http://localhost:5000/items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newRow),
+      });
+      if (response.ok) {
+        fetchData();
+        setNewRow({ name: "", calories: "", fat: "", carbs: "", protein: "" });
+      }
+    } catch (error) {
+      console.error("Error adding row:", error);
     }
   };
 
   // Delete a row
   const handleDeleteRow = async (id) => {
-    await fetch(`http://localhost:5000/items/${id}`, {
-      method: "DELETE",
-    });
-    fetchData();
+    try {
+      await fetch(`http://localhost:5000/items/${id}`, { method: "DELETE" });
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting row:", error);
+    }
   };
 
   // Update a row
   const handleSaveRow = async (row) => {
-    await fetch(`http://localhost:5000/items/${row.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(row),
-    });
-    setEditingRow(null);
-    fetchData();
+    try {
+      await fetch(`http://localhost:5000/items/${row.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(row),
+      });
+      setEditingRow(null);
+      fetchData();
+    } catch (error) {
+      console.error("Error saving row:", error);
+    }
   };
 
   return (
@@ -122,7 +136,9 @@ export default function CRUDDarkModeTable() {
                           onChange={(e) =>
                             setRows((prevRows) =>
                               prevRows.map((r) =>
-                                r.id === row.id ? { ...r, name: e.target.value } : r
+                                r.id === row.id
+                                  ? { ...r, name: e.target.value }
+                                  : r
                               )
                             )
                           }
@@ -199,67 +215,96 @@ export default function CRUDDarkModeTable() {
                     </TableCell>
                     <TableCell align="right">
                       {editingRow === row.id ? (
-                        <IconButton onClick={() => handleSaveRow(row)}>
-                          <SaveIcon />
-                        </IconButton>
+                        <>
+                          <Tooltip title="Save">
+                            <IconButton
+                              onClick={() => handleSaveRow(row)}
+                              color="primary"
+                            >
+                              <SaveIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Cancel">
+                            <IconButton
+                              onClick={() => setEditingRow(null)}
+                              color="secondary"
+                            >
+                              Cancel
+                            </IconButton>
+                          </Tooltip>
+                        </>
                       ) : (
-                        <IconButton onClick={() => setEditingRow(row.id)}>
-                          <EditIcon />
-                        </IconButton>
+                        <>
+                          <Tooltip title="Edit">
+                            <IconButton
+                              onClick={() => setEditingRow(row.id)}
+                              color="primary"
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton
+                              onClick={() => handleDeleteRow(row.id)}
+                              color="error"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </>
                       )}
-                      <IconButton onClick={() => handleDeleteRow(row.id)}>
-                        <DeleteIcon />
-                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))}
                 <TableRow>
                   <TableCell>
                     <TextField
+                      placeholder="Name"
                       value={newRow.name}
                       onChange={(e) =>
-                        setNewRow({ ...newRow, name: e.target.value })
+                        setNewRow((prev) => ({ ...prev, name: e.target.value }))
                       }
-                      placeholder="Name"
                     />
                   </TableCell>
                   <TableCell>
                     <TextField
+                      placeholder="Calories"
                       value={newRow.calories}
                       onChange={(e) =>
-                        setNewRow({ ...newRow, calories: e.target.value })
+                        setNewRow((prev) => ({ ...prev, calories: e.target.value }))
                       }
-                      placeholder="Calories"
                     />
                   </TableCell>
                   <TableCell>
                     <TextField
-                      value={newRow.fat}
-                      onChange={(e) => setNewRow({ ...newRow, fat: e.target.value })}
                       placeholder="Fat"
+                      value={newRow.fat}
+                      onChange={(e) =>
+                        setNewRow((prev) => ({ ...prev, fat: e.target.value }))
+                      }
                     />
                   </TableCell>
                   <TableCell>
                     <TextField
+                      placeholder="Carbs"
                       value={newRow.carbs}
                       onChange={(e) =>
-                        setNewRow({ ...newRow, carbs: e.target.value })
+                        setNewRow((prev) => ({ ...prev, carbs: e.target.value }))
                       }
-                      placeholder="Carbs"
                     />
                   </TableCell>
                   <TableCell>
                     <TextField
+                      placeholder="Protein"
                       value={newRow.protein}
                       onChange={(e) =>
-                        setNewRow({ ...newRow, protein: e.target.value })
+                        setNewRow((prev) => ({ ...prev, protein: e.target.value }))
                       }
-                      placeholder="Protein"
                     />
                   </TableCell>
                   <TableCell align="right">
                     <Tooltip title="Add Row">
-                      <IconButton onClick={handleAddRow}>
+                      <IconButton onClick={handleAddRow} color="success">
                         <AddCircleIcon />
                       </IconButton>
                     </Tooltip>
