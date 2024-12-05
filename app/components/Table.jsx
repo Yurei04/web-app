@@ -37,6 +37,12 @@ const darkTheme = createTheme({
   },
 });
 
+// Default fallback data
+const defaultRows = [
+  { id: 1, name: "Apple", calories: 52, fat: 0.2, carbs: 14, protein: 0.3 },
+  { id: 2, name: "Banana", calories: 96, fat: 0.3, carbs: 27, protein: 1.3 },
+];
+
 export default function CRUDDarkModeTable() {
   const [rows, setRows] = useState([]);
   const [editingRow, setEditingRow] = useState(null);
@@ -48,14 +54,16 @@ export default function CRUDDarkModeTable() {
     protein: "",
   });
 
-  // Fetch data from backend
+  // Fetch data from backend or fallback to default data
   const fetchData = async () => {
     try {
       const response = await fetch("http://localhost:5000/items");
+      if (!response.ok) throw new Error("Failed to fetch data");
       const data = await response.json();
       setRows(data);
     } catch (error) {
       console.error("Error fetching data:", error);
+      setRows(defaultRows); // Fallback to default rows on error
     }
   };
 
@@ -71,37 +79,44 @@ export default function CRUDDarkModeTable() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newRow),
       });
-      if (response.ok) {
-        fetchData();
-        setNewRow({ name: "", calories: "", fat: "", carbs: "", protein: "" });
-      }
+      if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+      fetchData(); // Refresh data after successful addition
     } catch (error) {
       console.error("Error adding row:", error);
+      alert("Failed to add new data. Please try again.");
     }
   };
+  
 
   // Delete a row
   const handleDeleteRow = async (id) => {
     try {
-      await fetch(`http://localhost:5000/items/${id}`, { method: "DELETE" });
-      fetchData();
+      const response = await fetch(`http://localhost:5000/items/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+      fetchData(); // Refresh data after successful deletion
     } catch (error) {
       console.error("Error deleting row:", error);
+      alert("Failed to delete data. Please try again.");
     }
   };
+  
 
   // Update a row
   const handleSaveRow = async (row) => {
     try {
-      await fetch(`http://localhost:5000/items/${row.id}`, {
+      const response = await fetch(`http://localhost:5000/items/${row.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(row),
       });
+      if (!response.ok) throw new Error("Failed to save row");
       setEditingRow(null);
       fetchData();
     } catch (error) {
       console.error("Error saving row:", error);
+      alert("Failed to save data. Please try again.");
     }
   };
 
@@ -303,7 +318,7 @@ export default function CRUDDarkModeTable() {
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Add Row">
+                    <Tooltip title="Add">
                       <IconButton onClick={handleAddRow} color="success">
                         <AddCircleIcon />
                       </IconButton>
