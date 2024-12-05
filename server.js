@@ -1,73 +1,63 @@
 // server.js
 const express = require("express");
 const bodyParser = require("body-parser");
-const cors = require("cors");
-const db = require("./db"); 
+const path = require("path");
+const { getItems, addItem, updateItem, deleteItem } = require("./app/database/item");
 
 const app = express();
-app.use(bodyParser.json());
-app.use(cors());
+const PORT = 3000;
 
-// API Endpoints
-app.get("/items", (req, res) => {
-  db.all("SELECT * FROM food_items", [], (err, rows) => {
+// Middleware
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "public"))); // Serve static files if needed
+
+// Get all items
+app.get("/api/items", (req, res) => {
+  getItems((err, items) => {
     if (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: "Failed to fetch items" });
     } else {
-      res.json(rows);
+      res.json(items);
     }
   });
 });
 
-app.post('/items', async (req, res) => {
-  try {
-    const { name, calories, fat, carbs, protein } = req.body;
-    if (!name || !calories || !fat || !carbs || !protein) {
-      return res.status(400).json({ error: 'Missing required fields' });
+// Add a new item
+app.post("/api/items", (req, res) => {
+  addItem(req.body, (err, result) => {
+    if (err) {
+      res.status(500).json({ error: "Failed to add item" });
+    } else {
+      res.json({ id: result.id });
     }
-    const result = await db.run(`INSERT INTO items (name, calories, fat, carbs, protein) VALUES (?, ?, ?, ?, ?)`, 
-      [name, calories, fat, carbs, protein]);
-    res.status(201).json({ id: result.lastID });
-  } catch (error) {
-    console.error('Error adding item:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  });
 });
 
-
-app.put("/items/:id", (req, res) => {
-  const { name, calories, fat, carbs, protein } = req.body;
-  const { id } = req.params;
-  db.run(
-    `UPDATE food_items SET name = ?, calories = ?, fat = ?, carbs = ?, protein = ? WHERE id = ?`,
-    [name, calories, fat, carbs, protein, id],
-    function (err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-      } else {
-        res.json({ updated: this.changes });
-      }
+// Update an item
+app.put("/api/items/:id", (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  updateItem(id, req.body, (err) => {
+    if (err) {
+      res.status(500).json({ error: "Failed to update item" });
+    } else {
+      res.sendStatus(200);
     }
-  );
+  });
 });
 
-app.delete('/items/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await db.run(`DELETE FROM items WHERE id = ?`, [id]);
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Item not found' });
+// Delete an item
+app.delete("/api/items/:id", (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  deleteItem(id, (err) => {
+    if (err) {
+      res.status(500).json({ error: "Failed to delete item" });
+    } else {
+      res.sendStatus(200);
     }
-    res.status(204).send();
-  } catch (error) {
-    console.error('Error deleting item:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+  });
 });
-
 
 // Start the server
-const PORT = 5000;
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });

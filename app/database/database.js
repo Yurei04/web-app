@@ -1,23 +1,25 @@
-// db.js (No need for JSX, as this is backend logic)
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 
-// Connect to SQLite3 database
-const dbPath = path.resolve(__dirname, "data.db");
-const db = new sqlite3.Database(dbPath, (err) => {
+const db = new sqlite3.Database(path.join(__dirname, "database.sqlite"), (err) => {
   if (err) {
     console.error("Error opening database:", err.message);
   } else {
-    console.log("Connected to the SQLite3 database.");
+    console.log("Connected to SQLite database.");
     db.run(
-      `CREATE TABLE IF NOT EXISTS food_items (
+      `CREATE TABLE IF NOT EXISTS items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         calories INTEGER,
         fat REAL,
-        carbs INTEGER,
+        carbs REAL,
         protein REAL
-      )`
+      )`,
+      (err) => {
+        if (err) {
+          console.error("Error creating table:", err.message);
+        }
+      }
     );
   }
 });

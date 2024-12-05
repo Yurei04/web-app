@@ -29,19 +29,10 @@ const darkTheme = createTheme({
   palette: {
     mode: "dark",
     primary: { main: "#90caf9" },
-    background: {
-      paper: "#121212",
-      default: "#121212",
-    },
+    background: { paper: "#121212", default: "#121212" },
     text: { primary: "#ffffff", secondary: "#bbbbbb" },
   },
 });
-
-// Default fallback data
-const defaultRows = [
-  { id: 1, name: "Apple", calories: 52, fat: 0.2, carbs: 14, protein: 0.3 },
-  { id: 2, name: "Banana", calories: 96, fat: 0.3, carbs: 27, protein: 1.3 },
-];
 
 export default function CRUDDarkModeTable() {
   const [rows, setRows] = useState([]);
@@ -54,16 +45,16 @@ export default function CRUDDarkModeTable() {
     protein: "",
   });
 
-  // Fetch data from backend or fallback to default data
+  // Fetch data from the backend
   const fetchData = async () => {
     try {
-      const response = await fetch("http://localhost:5000/items");
+      const response = await fetch("/api/items");
       if (!response.ok) throw new Error("Failed to fetch data");
       const data = await response.json();
       setRows(data);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setRows(defaultRows); // Fallback to default rows on error
+      alert("Failed to fetch data. Please check the backend.");
     }
   };
 
@@ -74,44 +65,41 @@ export default function CRUDDarkModeTable() {
   // Add a new row
   const handleAddRow = async () => {
     try {
-      const response = await fetch("http://localhost:5000/items", {
+      const response = await fetch("/api/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newRow),
       });
-      if (!response.ok) throw new Error(`Error: ${response.statusText}`);
-      fetchData(); // Refresh data after successful addition
+      if (!response.ok) throw new Error("Error adding item");
+      setNewRow({ name: "", calories: "", fat: "", carbs: "", protein: "" });
+      fetchData();
     } catch (error) {
       console.error("Error adding row:", error);
-      alert("Failed to add new data. Please try again.");
+      alert("Failed to add data. Please try again.");
     }
   };
-  
 
   // Delete a row
   const handleDeleteRow = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/items/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error(`Error: ${response.statusText}`);
-      fetchData(); // Refresh data after successful deletion
+      const response = await fetch(`/api/items/${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("Error deleting item");
+      fetchData();
     } catch (error) {
       console.error("Error deleting row:", error);
       alert("Failed to delete data. Please try again.");
     }
   };
-  
 
   // Update a row
   const handleSaveRow = async (row) => {
     try {
-      const response = await fetch(`http://localhost:5000/items/${row.id}`, {
+      const response = await fetch(`/api/items/${row.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(row),
       });
-      if (!response.ok) throw new Error("Failed to save row");
+      if (!response.ok) throw new Error("Error updating item");
       setEditingRow(null);
       fetchData();
     } catch (error) {
@@ -126,7 +114,7 @@ export default function CRUDDarkModeTable() {
         <Paper sx={{ width: "100%", mb: 2, p: 2 }}>
           <Toolbar>
             <Typography variant="h6" sx={{ flex: "1 1 100%" }}>
-              SQLite CRUD Table in Dark Mode
+              Food Items Table
             </Typography>
           </Toolbar>
           <TableContainer>
@@ -219,7 +207,9 @@ export default function CRUDDarkModeTable() {
                           onChange={(e) =>
                             setRows((prevRows) =>
                               prevRows.map((r) =>
-                                r.id === row.id ? { ...r, protein: e.target.value } : r
+                                r.id === row.id
+                                  ? { ...r, protein: e.target.value }
+                                  : r
                               )
                             )
                           }
@@ -318,8 +308,11 @@ export default function CRUDDarkModeTable() {
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Add">
-                      <IconButton onClick={handleAddRow} color="success">
+                    <Tooltip title="Add Row">
+                      <IconButton
+                        onClick={handleAddRow}
+                        color="primary"
+                      >
                         <AddCircleIcon />
                       </IconButton>
                     </Tooltip>
